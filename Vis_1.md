@@ -543,3 +543,55 @@ weather_df %>%
 ```
 
 ![](Vis_1_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+
+\##Saving and embedding plots
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point()
+```
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
+
+``` r
+ggsave("ggp_weather.pdf")
+```
+
+    ## Saving 7 x 5 in image
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+by default ggsave will save the plot that you made most recently so need
+to name an object then when ggsave the object that you named
+
+``` r
+ggp_weather = 
+  weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point()
+
+ggsave("plots/ggp_weather.pdf", ggp_weather, width = 8, height = 6)
+```
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+When knitting R is deciding how big the plots are in the github document
+so can re-size on the knitting / embedding
+
+``` r
+ggp_weather = 
+  weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point()
+
+ggsave("plots/ggp_weather.pdf", ggp_weather, width = 8, height = 6)
+```
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).

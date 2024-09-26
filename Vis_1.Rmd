@@ -292,3 +292,35 @@ weather_df %>%
   geom_density(alpha = .3)
 ```
 
+##Saving and embedding plots 
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point()
+
+ggsave("ggp_weather.pdf")
+```
+
+by default ggsave will save the plot that you made most recently so need to name an object then when ggsave the object that you named
+
+```{r}
+ggp_weather = 
+  weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point()
+
+ggsave("plots/ggp_weather.pdf", ggp_weather, width = 8, height = 6)
+```
+
+When knitting R is deciding how big the plots are in the github document so can re-size on the knitting / embedding
+
+```{r, fig.width = 6, fig.asp = 0.6}
+ggp_weather = 
+  weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point()
+
+ggsave("plots/ggp_weather.pdf", ggp_weather, width = 8, height = 6)
+```
+
