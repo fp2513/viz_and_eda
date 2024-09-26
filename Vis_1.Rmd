@@ -1,0 +1,91 @@
+---
+title: "vis_1"
+output: github_document
+date: "2024-09-26"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggridges)
+```
+
+rnoaa package (keep track of all the weather data, interact with the data that they make that data public)
+Which weather stations that i want to use, which variables, and from which dates
+
+Mutate step: creating new variable called name using case match, re-naming the weather stations 
+tmax are to change since before it was in 10ths of a degree change 
+
+```{r}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728", "USW00022534", "USS0023B17S"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2021-01-01",
+    date_max = "2022-12-31") |>
+  mutate(
+    name = case_match(
+      id, 
+      "USW00094728" ~ "CentralPark_NY", 
+      "USW00022534" ~ "Molokai_HI",
+      "USS0023B17S" ~ "Waterhole_WA"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) |>
+  select(name, id, everything())
+```
+
+Making our first plot 
+- Define the data set (first)
+- Define aesthetic mapping (x and y axis)
+- then geometrics ontop 
+    Geom_point(put points for all of the data points, scatter plot)
+
+```{r}
+ggplot(weather_df, aes(x = tmin, y = tmax)) + 
+  geom_point()
+```
+
+can also write like this since sometimes want to establish the data frame first then do mutate columns before plotting
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_point()
+```
+
+```{r}
+ggp_weather_scatterplot = 
+  weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point()
+
+ggp_weather_scatterplot
+```
+
+Asking which rows are missing values in their tmax column (Check why some rows are missing)
+```{r}
+weather_df %>% 
+  filter(is.na(tmax))
+```
+
+##Fancier scatterplots 
+
+colour is like x and y is a feature of the plot (need to name)
+alpha (makes more transparent to see better)
+geom_smooth smooth line fitting through the points (SE is standard error)
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .3, size = .8) + 
+  geom_smooth(se = FALSE)
+```
+
+Where you define the aesthetics matters
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .3, size = .8) + 
+  geom_smooth(se = FALSE)
+```
+
+The first line defines everything that comes out of the data frame (colour = name is applied to everything that comes after, geom_point and smooth)
+But geom_smooth does not know anything about colour therefore there is only one smooth line 
+Mostly issue is aesthetic mismatch 
