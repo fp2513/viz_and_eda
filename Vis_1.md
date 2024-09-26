@@ -255,3 +255,291 @@ weather_df %>%
 
 The method = lm in geom_smooth give straight line through data points
 rather than curvy Data processing piece useful before the visualisation
+
+\##Small Things
+
+Do not need to define everything, could just have a singular smooth line
+through
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_smooth(se = FALSE)
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+Scatter plot grows less and less useful as the dataframe grows bigger
+(eg. 1000 variable)
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_hex()
+```
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_binhex()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-12-1.png)<!-- --> Geom_hex does
+density
+
+Need to be careful of the order of the aesthetic The points want to be
+blue, but if you set colour = blue in the ggplot then ggplot will try
+assign ‘blue’ to every data point and then colour with another colour
+based on seeing that each data point is a part of the ‘blue’ group
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(colour = 'blue')
+```
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, colour = "blue")) + 
+  geom_point()
+```
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+variable name do not need ’‘, but not in variable goes into’’
+
+\##Univariate plots
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin)) + 
+  geom_histogram()
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_bin()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+Histograms are great! But get a little clunky
+
+Colour defines the outline of the histogram bar (so need to use fill and
+not colour)
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, color = name)) + 
+  geom_histogram()
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_bin()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, fill = name)) + 
+  geom_histogram()
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_bin()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+
+Need histograms next to each other bars rather than bars ontop of each
+other
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, fill = name)) + 
+  geom_histogram(position = "dodge")
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_bin()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+how would i fix this? maybe facet to seperate?
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, fill = name)) + 
+  geom_histogram() + 
+  facet_grid(. ~ name)
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_bin()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+
+maybe a density plot instead (based on what you want to see in the data
+can use different plot to viz) Density plots are like smooth histograms
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, fill = name)) +
+  geom_density(alpha = .3)
+```
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_density()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+
+\##Boxplots
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = name, y = tmin, fill = name)) + 
+  geom_boxplot()
+```
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_boxplot()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+
+\##Violin plot
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = name, y = tmin, fill = name)) + 
+  geom_violin()
+```
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_ydensity()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-22-1.png)<!-- --> Taking
+densities too Can be better than boxplots since can see when things are
+skewed, uni/multi modal Plots with a lot of data, making a violin plot
+can see if something is weird going on (more insight into the actual
+data distribution)
+
+\##Ridge plot
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, y = name)) +
+  geom_density_ridges()
+```
+
+    ## Picking joint bandwidth of 1.41
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_density_ridges()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+
+Ridge plots work when there are multiple groups that you need to make
+comparisons between The y-axis is always seperating between categorical
+variables (different groups)
+
+\##Learning assessment
+
+Make plots that compare precipitation across locations. Try a histogram,
+a density plot, a boxplot, a violin plot, and a ridgeplot; use aesthetic
+mappings to make your figure readable
+
+Not histogram (looking skewed not clear)
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = prcp, fill = name)) + 
+  geom_histogram() + 
+  facet_grid(. ~ name)
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+    ## Warning: Removed 15 rows containing non-finite outside the scale range
+    ## (`stat_bin()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+
+NOT density
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = prcp, fill = name)) +
+  geom_density(alpha = .3)
+```
+
+    ## Warning: Removed 15 rows containing non-finite outside the scale range
+    ## (`stat_density()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+
+Boxplot is no, since data is heavily skewed (there are a lot of
+outliers, better than density plots)
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = name, y = prcp, fill = name)) + 
+  geom_boxplot()
+```
+
+    ## Warning: Removed 15 rows containing non-finite outside the scale range
+    ## (`stat_boxplot()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = name, y = prcp, fill = name)) + 
+  geom_violin()
+```
+
+    ## Warning: Removed 15 rows containing non-finite outside the scale range
+    ## (`stat_ydensity()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = prcp, y = name)) +
+  geom_density_ridges()
+```
+
+    ## Picking joint bandwidth of 9.22
+
+    ## Warning: Removed 15 rows containing non-finite outside the scale range
+    ## (`stat_density_ridges()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+
+Realise that most days that it isn’t raining, so filter just on days
+that it is raining
+
+``` r
+weather_df %>% 
+  filter(prcp > 10) %>% 
+  ggplot(aes(x = prcp, fill = name)) +
+  geom_density(alpha = .3)
+```
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
