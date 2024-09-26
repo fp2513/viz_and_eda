@@ -89,3 +89,44 @@ weather_df %>%
 The first line defines everything that comes out of the data frame (colour = name is applied to everything that comes after, geom_point and smooth)
 But geom_smooth does not know anything about colour therefore there is only one smooth line 
 Mostly issue is aesthetic mismatch 
+
+Use faceting real quick 
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .3) + 
+  geom_smooth(se = FALSE) +
+  facet_grid(. ~ name)
+```
+
+dot means that we have don't have anythign seperating by row 
+but there is seperating by coloum (selected to seperate by the name column)
+
+Let's make a somewhat more interesting scatterplot
+Seeing temperature trends (since date is the x axis) and the size of the dots are representative of precipitation
+```{r}
+weather_df %>% 
+  ggplot(aes(x = date, y = tmax, colour = name, size = prcp)) +
+  geom_point(alpha = .3) + 
+  geom_smooth(se = FALSE) + 
+  facet_grid(. ~ name)
+```
+
+##Learning Assessment
+
+focuses only on Central Park, converts temperatures to Fahrenheit, makes a scatterplot of min vs. max temperature, and overlays a linear regression line
+```{r}
+weather_df %>% 
+  filter(name == "CentralPark_NY") %>% 
+  mutate(
+    tmax_fahr = tmax * (9 / 5) + 32,
+    tmin_far = tmin * (9 / 5) + 32
+  ) %>% 
+  ggplot(aes(x = tmin_far, y = tmax_fahr)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+The method = lm in geom_smooth give straight line through data points rather than curvy
+Data processing piece useful before the visualisation 

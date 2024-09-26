@@ -163,3 +163,95 @@ The first line defines everything that comes out of the data frame
 (colour = name is applied to everything that comes after, geom_point and
 smooth) But geom_smooth does not know anything about colour therefore
 there is only one smooth line Mostly issue is aesthetic mismatch
+
+Use faceting real quick
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .3) + 
+  geom_smooth(se = FALSE) +
+  facet_grid(. ~ name)
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+dot means that we have don’t have anythign seperating by row but there
+is seperating by coloum (selected to seperate by the name column)
+
+Let’s make a somewhat more interesting scatterplot Seeing temperature
+trends (since date is the x axis) and the size of the dots are
+representative of precipitation
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = date, y = tmax, colour = name, size = prcp)) +
+  geom_point(alpha = .3) + 
+  geom_smooth(se = FALSE) + 
+  facet_grid(. ~ name)
+```
+
+    ## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+    ## ℹ Please use `linewidth` instead.
+    ## This warning is displayed once every 8 hours.
+    ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+    ## generated.
+
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+    ## Warning: The following aesthetics were dropped during statistical transformation: size.
+    ## ℹ This can happen when ggplot fails to infer the correct grouping structure in
+    ##   the data.
+    ## ℹ Did you forget to specify a `group` aesthetic or to convert a numerical
+    ##   variable into a factor?
+    ## The following aesthetics were dropped during statistical transformation: size.
+    ## ℹ This can happen when ggplot fails to infer the correct grouping structure in
+    ##   the data.
+    ## ℹ Did you forget to specify a `group` aesthetic or to convert a numerical
+    ##   variable into a factor?
+    ## The following aesthetics were dropped during statistical transformation: size.
+    ## ℹ This can happen when ggplot fails to infer the correct grouping structure in
+    ##   the data.
+    ## ℹ Did you forget to specify a `group` aesthetic or to convert a numerical
+    ##   variable into a factor?
+
+    ## Warning: Removed 19 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+\##Learning Assessment
+
+focuses only on Central Park, converts temperatures to Fahrenheit, makes
+a scatterplot of min vs. max temperature, and overlays a linear
+regression line
+
+``` r
+weather_df %>% 
+  filter(name == "CentralPark_NY") %>% 
+  mutate(
+    tmax_fahr = tmax * (9 / 5) + 32,
+    tmin_far = tmin * (9 / 5) + 32
+  ) %>% 
+  ggplot(aes(x = tmin_far, y = tmax_fahr)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+
+![](Vis_1_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+The method = lm in geom_smooth give straight line through data points
+rather than curvy Data processing piece useful before the visualisation
