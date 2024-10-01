@@ -1,0 +1,11 @@
+---
+title: "Vis_2"
+output: github_document
+date: "2024-10-01"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggridges)
+```
+
