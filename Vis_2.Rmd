@@ -110,3 +110,85 @@ weather_df %>%
   viridis::scale_color_viridis(discrete = TRUE)
 ```
 
+##Themes 
+
+Before just about how to change what the plot looks in general 
+Themes are used to modify non-data elements of a plot – they don’t change mappings or how data are render, but control things like background color and location of the the legend. Using themes can help with general plot appearance.
+
+```{r}
+ggp_scatterplot = 
+  weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .3) +
+  labs(
+    title = "Temperature scatterplot",
+    x = "Minimum Temp (C)",
+    y = "Maximum Temp (C)",
+    color = "location",
+    caption = "Weather taken from rnoaa package for three stations"
+  ) + 
+  viridis::scale_color_viridis(discrete = TRUE)
+```
+
+By saying that ggp_scatterplot = something, then can just do ggp_scatterplot later and add things directly onto it 
+
+```{r}
+ggp_scatterplot + 
+  theme(legend.position = "bottom")
+```
+
+Black and white background
+```{r}
+ggp_scatterplot + 
+  theme_bw() + 
+  theme(legend.position = "bottom")
+```
+
+Order matters here:
+Putting in opposite order then legend is on the side, since the theme of black and white will set it back to default 
+
+```{r}
+ggp_scatterplot + 
+  theme_classic() + 
+  theme(legend.position = "bottom")
+```
+
+```{r}
+ggp_scatterplot + 
+  ggthemes::theme_excel() + 
+  theme(legend.position = "bottom")
+```
+
+**Learning Assessment: Revisit the plot showing tmax against date for each location. Use labels, scale options, and theme changes to improve the readability of this plot**
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) + 
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  viridis::scale_color_viridis(discrete = TRUE) + 
+    labs(
+      x = "Date",
+      y = "Maximum Temp (C)", 
+      title = "Seasonal variation in Max Temp",
+      size = "Precipitation"
+    ) +
+    theme_minimal() +
+    theme(legend.position = "bottom")
+```
+
+General steps: 
+1. load data into ggplot
+2. Geom_smooth 
+3. Color
+4. Labels 
+5. Theme of the overall 
+
+##Extra bonus stuff in `ggplot`
+
+Use different datasets in different `geom`s
+
+```{r}
+
+```
+
