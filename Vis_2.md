@@ -261,3 +261,87 @@ Labels 5. Theme of the overall
 \##Extra bonus stuff in `ggplot`
 
 Use different datasets in different `geom`s
+
+``` r
+central_park_df = 
+  weather_df |> 
+  filter(name == "CentralPark_NY")
+
+molokai_df = 
+  weather_df |> 
+  filter(name == "Molokai_HI")
+
+ggplot(data = molokai_df, aes(x = date, y = tmax, color = name)) + 
+  geom_point() + 
+  geom_line(data = central_park_df) 
+```
+
+    ## Warning: Removed 1 row containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](Vis_2_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+Overlaying two different geometries, where one is a line and another is
+a dot can overlay two differnt geom types
+
+\##Multiple panels
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmax, fill = name)) + 
+  geom_density() + 
+  facet_grid(. ~ name)
+```
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_density()`).
+
+![](Vis_2_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+All the plot type (density plots) but in seperate facet grids (here
+seperated out by name)
+
+``` r
+ggp_tmax_tmin = 
+  weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = .3)
+
+ggp_tmax_density = 
+  weather_df %>% 
+  ggplot(aes(x = tmax, fill = name)) + 
+  geom_density(alpha = .3)
+
+ggp_tmax_date = 
+  weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) +
+  geom_point() +
+  geom_smooth(se = FALSE)
+
+(ggp_tmax_date + ggp_tmax_density) / ggp_tmax_date
+```
+
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_density()`).
+
+    ## `geom_smooth()` using method = 'loess' and formula = 'y ~ x'
+
+    ## Warning: Removed 17 rows containing non-finite outside the scale range
+    ## (`stat_smooth()`).
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](Vis_2_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+Here there are two different types of graphs, one is a scatter and
+another is a density function, cannot overlay Handy to say that here is
+one type of information here is another type of information
