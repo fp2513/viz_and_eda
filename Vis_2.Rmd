@@ -6,6 +6,107 @@ date: "2024-10-01"
 
 ```{r setup, include=FALSE}
 library(tidyverse)
-library(ggridges)
+library(patchwork)
+```
+
+Better graphics today 
+
+```{r}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728", "USW00022534", "USS0023B17S"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2021-01-01",
+    date_max = "2022-12-31") |>
+  mutate(
+    name = case_match(
+      id, 
+      "USW00094728" ~ "CentralPark_NY", 
+      "USW00022534" ~ "Molokai_HI",
+      "USS0023B17S" ~ "Waterhole_WA"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) |>
+  select(name, id, everything())
+```
+
+Make a scatterplot but fancy this time
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .3) +
+  labs(
+    title = "Temperature scatterplot",
+    x = "Minimum Temp (C)",
+    y = "Maximum Temp (C)",
+    color = "location",
+    caption = "Weather taken from rnoaa package for three stations"
+  )
+```
+
+Sometimes it repeating information that is in the text already, but that is fine 
+
+Looking at scales -- start with `x` and `y` 
+
+Some things happen by default (the scale of the axis currently from -20 to 20 but we can control that)
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .3) +
+  labs(
+    title = "Temperature scatterplot",
+    x = "Minimum Temp (C)",
+    y = "Maximum Temp (C)",
+    color = "location",
+    caption = "Weather taken from rnoaa package for three stations"
+  ) + 
+  scale_x_continuous(
+    breaks = c(-15, 0, 20),
+    labels = c("-15C", "0", "20")
+  ) +
+  scale_y_continuous(
+    limits = c(0, 30),
+    transform = "sqrt"
+  )
+```
+
+Different ways to get to the same point, using the limits here are a filtering step to only show data from 0 to 30 
+
+Transformations are really helpful (sometimes do not want to directly mutate the dataframe but can transform when plotting the data)
+
+Look at color:
+
+This is not very helpful trying to create your own colour pallete. 
+Trying to create your own color scheme usually doesn’t go well
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .3) +
+  labs(
+    title = "Temperature scatterplot",
+    x = "Minimum Temp (C)",
+    y = "Maximum Temp (C)",
+    color = "location",
+    caption = "Weather taken from rnoaa package for three stations"
+  ) + 
+  scale_color_hue(h = c(10,40))
+```
+
+I encourage you to use the `viridis` package instead. There are several options, but the default color scheme works nicely!
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .3) +
+  labs(
+    title = "Temperature scatterplot",
+    x = "Minimum Temp (C)",
+    y = "Maximum Temp (C)",
+    color = "location",
+    caption = "Weather taken from rnoaa package for three stations"
+  ) + 
+  viridis::scale_color_viridis(discrete = TRUE)
 ```
 
