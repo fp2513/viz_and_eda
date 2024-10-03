@@ -6,7 +6,129 @@ date: "2024-10-03"
 
 ```{r setup, include=FALSE}
 library(tidyverse)
-library(ggridges)
 ```
+
+All of the looking at the data, poking at it between importing and analysis 
+Includes: visualisation, checks hypothesis generating (sometimes), mostly about getting a sense of the data before getting started 
+
+Group level summaries today: 
+May want to do examine groups visually and quantitatively (can do numeric summaries today)
+  Computing a mean, median, sd, missingness in a group 
+  
+Unless makes the group explicit it doesn't exist especially after you start mutating it etc. group_by makes the grouping that we care about in the dataset explicit so that when we use other things in tidyverse they are aware of it. 
+
+```{r}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728", "USW00022534", "USS0023B17S"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2021-01-01",
+    date_max = "2022-12-31") |>
+  mutate(
+    name = case_match(
+      id, 
+      "USW00094728" ~ "CentralPark_NY", 
+      "USW00022534" ~ "Molokai_HI",
+      "USS0023B17S" ~ "Waterhole_WA"),
+    tmin = tmin / 10,
+    tmax = tmax / 10,
+    month = lubridate::floor_date(date, unit = "month")) |>
+  select(name, id, everything())
+```
+
+lubridate to use data and time variables (floor_date can round down, here to the first of the month)
+
+Let's make some plots
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = prcp)) + 
+  geom_histogram()
+```
+
+```{r}
+weather_df %>% 
+  filter(prcp > 1000)
+```
+
+Taking a look at stuff and trying to understand what is going on 
+
+```{r}
+weather_df %>%
+  filter(tmax > 20, tmax < 30) %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name, shape = name)) +
+  geom_point()
+```
+
+something is weird since Central park and Molokai are recording data differently since their data points are appearing in bands where as Waterhole are more scattered 
+
+##group_by()
+
+```{r}
+weather_df %>% 
+  group_by(name)
+```
+
+```{r}
+weather_df %>% 
+  group_by(month)
+```
+
+Not modifying the dataset, but adding a layer ontop for useful subsequent things 
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  summarise(n_obs = n())
+```
+
+```{r}
+weather_df %>% 
+  group_by(month) %>% 
+  summarise(n_obs = n())
+```
+
+the number of distinct observations 
+
+```{r}
+weather_df %>% 
+  group_by(month) %>% 
+  summarise(
+    n_obs = n(),
+    n_dist = n_distinct(month))
+```
+
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarise(
+    n_obs = n())
+```
+
+One off function that does counting 
+
+```{r}
+weather_df %>% 
+  count(name)
+```
+
+##2x2 tables (kinda)
+
+Binary predictor for something to look like a 2x2 table
+
+```{r}
+weather_df %>% 
+  drop_na(tmax) %>% 
+  filter(name!= "Molokai_HI") %>% 
+  mutate(
+    cold = case_when(
+      tmax < 5 ~ "cold", 
+      tmax >= 5 ~ "not_cold"
+    )
+  ) %>% 
+  janitor::tabyl(name, cold)
+```
+
+##general numeric summaries 
 
 
