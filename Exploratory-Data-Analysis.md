@@ -393,3 +393,341 @@ name from the name column
 
 Computing groups and summaries are important in getting to know the
 dataset
+
+Other things that we can do ontop of the group
+
+\##grouped mutate
+
+``` r
+weather_df %>% 
+  mutate(mean_tmax = mean(tmax, na.rm = TRUE))
+```
+
+    ## # A tibble: 2,190 × 8
+    ##    name           id          date        prcp  tmax  tmin month      mean_tmax
+    ##    <chr>          <chr>       <date>     <dbl> <dbl> <dbl> <date>         <dbl>
+    ##  1 CentralPark_NY USW00094728 2021-01-01   157   4.4   0.6 2021-01-01      17.9
+    ##  2 CentralPark_NY USW00094728 2021-01-02    13  10.6   2.2 2021-01-01      17.9
+    ##  3 CentralPark_NY USW00094728 2021-01-03    56   3.3   1.1 2021-01-01      17.9
+    ##  4 CentralPark_NY USW00094728 2021-01-04     5   6.1   1.7 2021-01-01      17.9
+    ##  5 CentralPark_NY USW00094728 2021-01-05     0   5.6   2.2 2021-01-01      17.9
+    ##  6 CentralPark_NY USW00094728 2021-01-06     0   5     1.1 2021-01-01      17.9
+    ##  7 CentralPark_NY USW00094728 2021-01-07     0   5    -1   2021-01-01      17.9
+    ##  8 CentralPark_NY USW00094728 2021-01-08     0   2.8  -2.7 2021-01-01      17.9
+    ##  9 CentralPark_NY USW00094728 2021-01-09     0   2.8  -4.3 2021-01-01      17.9
+    ## 10 CentralPark_NY USW00094728 2021-01-10     0   5    -1.6 2021-01-01      17.9
+    ## # ℹ 2,180 more rows
+
+Here it does the mean tmax of all the observations But if want mean tmax
+of specific places (group) then can group by Once added grouping layer,
+then mutate will keep track of those groups
+
+``` r
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    centered_tmax = tmax - mean_tmax) %>% 
+  ggplot(aes(x = date, y = centered_tmax, color = name)) +
+  geom_point()
+```
+
+    ## Warning: Removed 17 rows containing missing values or values outside the scale range
+    ## (`geom_point()`).
+
+![](Exploratory-Data-Analysis_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+Centering is each done for them seperately
+
+\##Window function
+
+The previous example used mean() to compute the mean within each group,
+which was then subtracted from the observed max tempurature. mean()
+takes n inputs and produces a single output.
+
+Window functions, in contrast, take n inputs and return n outputs, and
+the outputs depend on all the inputs.
+
+Window functions are iterative(?)
+
+Find hottest / coldest days
+
+``` r
+weather_df %>% 
+  mutate(
+    temp_rank = min_rank(tmax)
+  ) %>% 
+  filter(temp_rank < 10)
+```
+
+    ## # A tibble: 10 × 8
+    ##    name           id          date        prcp  tmax  tmin month      temp_rank
+    ##    <chr>          <chr>       <date>     <dbl> <dbl> <dbl> <date>         <int>
+    ##  1 CentralPark_NY USW00094728 2022-01-15     0  -6   -12.1 2022-01-01         7
+    ##  2 CentralPark_NY USW00094728 2022-12-24     0  -9.3 -13.8 2022-12-01         4
+    ##  3 Waterhole_WA   USS0023B17S 2021-02-11    51  -5.6 -10.9 2021-02-01         9
+    ##  4 Waterhole_WA   USS0023B17S 2021-12-26   102 -11.4 -18.3 2021-12-01         1
+    ##  5 Waterhole_WA   USS0023B17S 2021-12-27    25  -9.8 -19.6 2021-12-01         2
+    ##  6 Waterhole_WA   USS0023B17S 2021-12-28     0  -6   -11.4 2021-12-01         7
+    ##  7 Waterhole_WA   USS0023B17S 2021-12-29   102  -7.9 -15.4 2021-12-01         6
+    ##  8 Waterhole_WA   USS0023B17S 2022-02-22   102  -9.3 -16.6 2022-02-01         4
+    ##  9 Waterhole_WA   USS0023B17S 2022-12-18     0  -5.6 -11.3 2022-12-01         9
+    ## 10 Waterhole_WA   USS0023B17S 2022-12-21     0  -9.6 -18.4 2022-12-01         3
+
+ten of the coldest day in the dataframe
+
+``` r
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    temp_rank = min_rank(tmax)
+  ) %>% 
+  filter(temp_rank < 4)
+```
+
+    ## # A tibble: 9 × 8
+    ## # Groups:   name [3]
+    ##   name           id          date        prcp  tmax  tmin month      temp_rank
+    ##   <chr>          <chr>       <date>     <dbl> <dbl> <dbl> <date>         <int>
+    ## 1 CentralPark_NY USW00094728 2022-01-15     0  -6   -12.1 2022-01-01         2
+    ## 2 CentralPark_NY USW00094728 2022-01-21     0  -5.5  -9.9 2022-01-01         3
+    ## 3 CentralPark_NY USW00094728 2022-12-24     0  -9.3 -13.8 2022-12-01         1
+    ## 4 Molokai_HI     USW00022534 2021-01-18   234  22.2  19.4 2021-01-01         2
+    ## 5 Molokai_HI     USW00022534 2021-03-18   142  21.7  18.9 2021-03-01         1
+    ## 6 Molokai_HI     USW00022534 2022-11-28    56  22.2  20.6 2022-11-01         2
+    ## 7 Waterhole_WA   USS0023B17S 2021-12-26   102 -11.4 -18.3 2021-12-01         1
+    ## 8 Waterhole_WA   USS0023B17S 2021-12-27    25  -9.8 -19.6 2021-12-01         2
+    ## 9 Waterhole_WA   USS0023B17S 2022-12-21     0  -9.6 -18.4 2022-12-01         3
+
+Now getting top 3 coldest days for each name
+
+``` r
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    temp_rank = min_rank(desc(tmax))
+  ) %>% 
+  filter(temp_rank < 4)
+```
+
+    ## # A tibble: 16 × 8
+    ## # Groups:   name [3]
+    ##    name           id          date        prcp  tmax  tmin month      temp_rank
+    ##    <chr>          <chr>       <date>     <dbl> <dbl> <dbl> <date>         <int>
+    ##  1 CentralPark_NY USW00094728 2021-06-29     0  35    25.6 2021-06-01         3
+    ##  2 CentralPark_NY USW00094728 2021-06-30   165  36.7  22.8 2021-06-01         1
+    ##  3 CentralPark_NY USW00094728 2022-07-20     0  35    25.6 2022-07-01         3
+    ##  4 CentralPark_NY USW00094728 2022-07-23     0  35    25.6 2022-07-01         3
+    ##  5 CentralPark_NY USW00094728 2022-07-24     0  35    26.1 2022-07-01         3
+    ##  6 CentralPark_NY USW00094728 2022-08-09     8  36.1  25.6 2022-08-01         2
+    ##  7 Molokai_HI     USW00022534 2021-05-31     0  32.2  17.2 2021-05-01         2
+    ##  8 Molokai_HI     USW00022534 2021-09-16     0  32.2  21.1 2021-09-01         2
+    ##  9 Molokai_HI     USW00022534 2022-07-30     0  32.2  22.2 2022-07-01         2
+    ## 10 Molokai_HI     USW00022534 2022-08-06     0  33.3  20.6 2022-08-01         1
+    ## 11 Molokai_HI     USW00022534 2022-08-17     0  32.2  21.1 2022-08-01         2
+    ## 12 Molokai_HI     USW00022534 2022-09-24     0  32.2  22.2 2022-09-01         2
+    ## 13 Molokai_HI     USW00022534 2022-09-30     0  32.2  20   2022-09-01         2
+    ## 14 Waterhole_WA   USS0023B17S 2021-06-27     0  28.5  17.6 2021-06-01         3
+    ## 15 Waterhole_WA   USS0023B17S 2021-06-28     0  30.8  20.7 2021-06-01         2
+    ## 16 Waterhole_WA   USS0023B17S 2021-06-29     0  32.4  17.6 2021-06-01         1
+
+``` r
+weather_df %>% 
+  group_by(name) %>% 
+  filter(min_rank(tmax) < 4) %>% 
+  arrange(tmax)
+```
+
+    ## # A tibble: 9 × 7
+    ## # Groups:   name [3]
+    ##   name           id          date        prcp  tmax  tmin month     
+    ##   <chr>          <chr>       <date>     <dbl> <dbl> <dbl> <date>    
+    ## 1 Waterhole_WA   USS0023B17S 2021-12-26   102 -11.4 -18.3 2021-12-01
+    ## 2 Waterhole_WA   USS0023B17S 2021-12-27    25  -9.8 -19.6 2021-12-01
+    ## 3 Waterhole_WA   USS0023B17S 2022-12-21     0  -9.6 -18.4 2022-12-01
+    ## 4 CentralPark_NY USW00094728 2022-12-24     0  -9.3 -13.8 2022-12-01
+    ## 5 CentralPark_NY USW00094728 2022-01-15     0  -6   -12.1 2022-01-01
+    ## 6 CentralPark_NY USW00094728 2022-01-21     0  -5.5  -9.9 2022-01-01
+    ## 7 Molokai_HI     USW00022534 2021-03-18   142  21.7  18.9 2021-03-01
+    ## 8 Molokai_HI     USW00022534 2021-01-18   234  22.2  19.4 2021-01-01
+    ## 9 Molokai_HI     USW00022534 2022-11-28    56  22.2  20.6 2022-11-01
+
+instead of creating a temperature rank variable just filtering
+immediately. In both of these, we’ve skipped a mutate() statement that
+would create a ranking variable, and gone straight to filtering based on
+the result.
+
+``` r
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    lagged_temp = lag(tmax)
+  )
+```
+
+    ## # A tibble: 2,190 × 8
+    ## # Groups:   name [3]
+    ##    name           id         date        prcp  tmax  tmin month      lagged_temp
+    ##    <chr>          <chr>      <date>     <dbl> <dbl> <dbl> <date>           <dbl>
+    ##  1 CentralPark_NY USW000947… 2021-01-01   157   4.4   0.6 2021-01-01        NA  
+    ##  2 CentralPark_NY USW000947… 2021-01-02    13  10.6   2.2 2021-01-01         4.4
+    ##  3 CentralPark_NY USW000947… 2021-01-03    56   3.3   1.1 2021-01-01        10.6
+    ##  4 CentralPark_NY USW000947… 2021-01-04     5   6.1   1.7 2021-01-01         3.3
+    ##  5 CentralPark_NY USW000947… 2021-01-05     0   5.6   2.2 2021-01-01         6.1
+    ##  6 CentralPark_NY USW000947… 2021-01-06     0   5     1.1 2021-01-01         5.6
+    ##  7 CentralPark_NY USW000947… 2021-01-07     0   5    -1   2021-01-01         5  
+    ##  8 CentralPark_NY USW000947… 2021-01-08     0   2.8  -2.7 2021-01-01         5  
+    ##  9 CentralPark_NY USW000947… 2021-01-09     0   2.8  -4.3 2021-01-01         2.8
+    ## 10 CentralPark_NY USW000947… 2021-01-10     0   5    -1.6 2021-01-01         2.8
+    ## # ℹ 2,180 more rows
+
+lagged: compare an observation to it’s previous value. This is useful,
+for example, to find the day-by-day change in max temperature within
+each station over the year. Not that it looks specifically at the
+sequential date but just looking at sequential rows (will be an issue if
+there are missing dates, not chronological dates)
+
+``` r
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    lagged_temp = lag(tmax),
+    temp_change = tmax - lagged_temp
+  ) %>% 
+  filter(min_rank(temp_change) < 3)
+```
+
+    ## # A tibble: 6 × 9
+    ## # Groups:   name [3]
+    ##   name     id    date        prcp  tmax  tmin month      lagged_temp temp_change
+    ##   <chr>    <chr> <date>     <dbl> <dbl> <dbl> <date>           <dbl>       <dbl>
+    ## 1 Central… USW0… 2022-02-24     0   1.7  -1.6 2022-02-01        20         -18.3
+    ## 2 Central… USW0… 2022-12-24     0  -9.3 -13.8 2022-12-01        14.4       -23.7
+    ## 3 Molokai… USW0… 2021-01-18   234  22.2  19.4 2021-01-01        27.8        -5.6
+    ## 4 Molokai… USW0… 2022-11-28    56  22.2  20.6 2022-11-01        27.2        -5  
+    ## 5 Waterho… USS0… 2021-06-30     0  21.5  10.9 2021-06-01        32.4       -10.9
+    ## 6 Waterho… USS0… 2022-06-28     0  12.4   5.7 2022-06-01        23.6       -11.2
+
+``` r
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    lagged_temp = lag(tmax),
+    temp_change = tmax - lagged_temp
+  ) %>% 
+  summarise(
+    sd_tmax_change = sd(temp_change, na.rm = TRUE)
+  )
+```
+
+    ## # A tibble: 3 × 2
+    ##   name           sd_tmax_change
+    ##   <chr>                   <dbl>
+    ## 1 CentralPark_NY           4.43
+    ## 2 Molokai_HI               1.24
+    ## 3 Waterhole_WA             3.04
+
+\##Learning Assessment
+
+In the PULSE data, the primary outcome is BDI score; it’s observed over
+follow-up visits, and we might ask if the typical BDI score values are
+roughly similar at each. Try to write a code chunk that imports, cleans,
+and summarizes the PULSE data to examine the mean and median at each
+visit. Export the results of this in a reader-friendly format.
+
+``` r
+pulse_data = 
+  haven::read_sas("./data/public_pulse_data.sas7bdat")  %>% 
+  janitor::clean_names()  %>% 
+  pivot_longer(
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit", 
+    names_prefix = "bdi_score_",
+    values_to = "bdi")  %>% 
+  select(id, visit, everything())  %>% 
+  mutate(
+    visit = replace(visit, visit == "bl", "00m"),
+    visit = factor(visit, levels = str_c(c("00", "01", "06", "12"), "m"))) %>% 
+  arrange(id, visit)
+
+pulse_data %>% 
+  group_by(visit) %>%  
+  summarize(
+    mean_bdi = mean(bdi, na.rm = TRUE),
+    median_bdi = median(bdi, na.rm = TRUE)) %>%  
+  knitr::kable(digits = 3)
+```
+
+| visit | mean_bdi | median_bdi |
+|:------|---------:|-----------:|
+| 00m   |    7.995 |          6 |
+| 01m   |    6.046 |          4 |
+| 06m   |    5.672 |          4 |
+| 12m   |    6.097 |          4 |
+
+In the FAS data, there are several outcomes of interest; for now, focus
+on post-natal day on which a pup is able to pivot. Two predictors of
+interest are the dose level and the day of treatment. Produce a
+reader-friendly table that quantifies the possible associations between
+dose, day of treatment, and the ability to pivot.
+
+``` r
+litters_df = 
+  read_csv("data/FAS_litters.csv", na = c("NA", ".", "")) %>% 
+  janitor::clean_names() %>% 
+  separate(
+    group, into = c("dose", "tx_day"), sep = 3
+  )
+```
+
+    ## Rows: 49 Columns: 8
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (2): Group, Litter Number
+    ## dbl (6): GD0 weight, GD18 weight, GD of Birth, Pups born alive, Pups dead @ ...
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+pups_df = 
+  read_csv("data/FAS_pups.csv", na = c("NA", ".", "")) %>% 
+  janitor::clean_names()
+```
+
+    ## Rows: 313 Columns: 6
+    ## ── Column specification ────────────────────────────────────────────────────────
+    ## Delimiter: ","
+    ## chr (1): Litter Number
+    ## dbl (5): Sex, PD ears, PD eyes, PD pivot, PD walk
+    ## 
+    ## ℹ Use `spec()` to retrieve the full column specification for this data.
+    ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
+
+``` r
+fas_df = 
+  left_join(pups_df, litters_df, by = "litter_number")
+```
+
+Now I have all the information that I need Now to compute
+
+``` r
+fas_df %>% 
+  drop_na(dose) %>% 
+  group_by(dose, tx_day) %>% 
+  summarise(mean_pivot = mean(pd_pivot, na.rm = TRUE)) %>% 
+  pivot_wider(
+    names_from = tx_day,
+    values_from = mean_pivot
+  ) %>% 
+  knitr::kable(digits = 2)
+```
+
+    ## `summarise()` has grouped output by 'dose'. You can override using the
+    ## `.groups` argument.
+
+| dose |    7 |    8 |
+|:-----|-----:|-----:|
+| Con  | 7.00 | 6.24 |
+| Low  | 7.94 | 7.72 |
+| Mod  | 6.98 | 7.04 |

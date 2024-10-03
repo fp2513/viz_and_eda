@@ -6,6 +6,7 @@ date: "2024-10-03"
 
 ```{r setup, include=FALSE}
 library(tidyverse)
+library(haven)
 ```
 
 All of the looking at the data, poking at it between importing and analysis 
@@ -193,6 +194,173 @@ the col.names just makes the names prettier, wihtout will just keep the origianl
 
 Computing groups and summaries are important in getting to know the dataset 
 
+Other things that we can do ontop of the group
+
+##grouped mutate 
+
+```{r}
+weather_df %>% 
+  mutate(mean_tmax = mean(tmax, na.rm = TRUE))
+```
+
+Here it does the mean tmax of all the observations
+But if want mean tmax of specific places (group) then can group by 
+Once added grouping layer, then mutate will keep track of those groups 
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    centered_tmax = tmax - mean_tmax) %>% 
+  ggplot(aes(x = date, y = centered_tmax, color = name)) +
+  geom_point()
+```
+
+Centering is each done for them seperately 
+
+##Window function 
+
+The previous example used mean() to compute the mean within each group, which was then subtracted from the observed max tempurature. mean() takes n inputs and produces a single output.
+
+Window functions, in contrast, take n inputs and return n outputs, and the outputs depend on all the inputs. 
+
+Window functions are iterative(?)
+
+Find hottest / coldest days
+
+```{r}
+weather_df %>% 
+  mutate(
+    temp_rank = min_rank(tmax)
+  ) %>% 
+  filter(temp_rank < 10)
+```
+
+ten of the coldest day in the dataframe 
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    temp_rank = min_rank(tmax)
+  ) %>% 
+  filter(temp_rank < 4)
+```
+
+Now getting top 3 coldest days for each name 
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    temp_rank = min_rank(desc(tmax))
+  ) %>% 
+  filter(temp_rank < 4)
+```
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  filter(min_rank(tmax) < 4) %>% 
+  arrange(tmax)
+```
+
+instead of creating a temperature rank variable just filtering immediately. 
+In both of these, we’ve skipped a mutate() statement that would create a ranking variable, and gone straight to filtering based on the result.
 
 
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    lagged_temp = lag(tmax)
+  )
+```
+
+lagged: compare an observation to it’s previous value. 
+This is useful, for example, to find the day-by-day change in max temperature within each station over the year. 
+Not that it looks specifically at the sequential date but just looking at sequential rows (will be an issue if there are missing dates, not chronological dates)
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    lagged_temp = lag(tmax),
+    temp_change = tmax - lagged_temp
+  ) %>% 
+  filter(min_rank(temp_change) < 3)
+```
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    lagged_temp = lag(tmax),
+    temp_change = tmax - lagged_temp
+  ) %>% 
+  summarise(
+    sd_tmax_change = sd(temp_change, na.rm = TRUE)
+  )
+```
+
+##Learning Assessment 
+
+In the PULSE data, the primary outcome is BDI score; it’s observed over follow-up visits, and we might ask if the typical BDI score values are roughly similar at each. Try to write a code chunk that imports, cleans, and summarizes the PULSE data to examine the mean and median at each visit. Export the results of this in a reader-friendly format.
+
+```{r}
+pulse_data = 
+  haven::read_sas("./data/public_pulse_data.sas7bdat")  %>% 
+  janitor::clean_names()  %>% 
+  pivot_longer(
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit", 
+    names_prefix = "bdi_score_",
+    values_to = "bdi")  %>% 
+  select(id, visit, everything())  %>% 
+  mutate(
+    visit = replace(visit, visit == "bl", "00m"),
+    visit = factor(visit, levels = str_c(c("00", "01", "06", "12"), "m"))) %>% 
+  arrange(id, visit)
+
+pulse_data %>% 
+  group_by(visit) %>%  
+  summarize(
+    mean_bdi = mean(bdi, na.rm = TRUE),
+    median_bdi = median(bdi, na.rm = TRUE)) %>%  
+  knitr::kable(digits = 3)
+```
+
+In the FAS data, there are several outcomes of interest; for now, focus on post-natal day on which a pup is able to pivot. Two predictors of interest are the dose level and the day of treatment. Produce a reader-friendly table that quantifies the possible associations between dose, day of treatment, and the ability to pivot.
+
+```{r}
+litters_df = 
+  read_csv("data/FAS_litters.csv", na = c("NA", ".", "")) %>% 
+  janitor::clean_names() %>% 
+  separate(
+    group, into = c("dose", "tx_day"), sep = 3
+  )
+
+pups_df = 
+  read_csv("data/FAS_pups.csv", na = c("NA", ".", "")) %>% 
+  janitor::clean_names()
+
+fas_df = 
+  left_join(pups_df, litters_df, by = "litter_number")
+```
+
+Now I have all the information that I need
+Now to compute
+
+```{r}
+fas_df %>% 
+  drop_na(dose) %>% 
+  group_by(dose, tx_day) %>% 
+  summarise(mean_pivot = mean(pd_pivot, na.rm = TRUE)) %>% 
+  pivot_wider(
+    names_from = tx_day,
+    values_from = mean_pivot
+  ) %>% 
+  knitr::kable(digits = 2)
+```
 
