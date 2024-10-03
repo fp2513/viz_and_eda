@@ -1,0 +1,12 @@
+---
+title: "Exploratory Data Analysis"
+output: github_document
+date: "2024-10-03"
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggridges)
+```
+
+

@@ -7,6 +7,7 @@ date: "2024-10-01"
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(patchwork)
+library(haven)
 ```
 
 Better graphics today 
@@ -237,3 +238,88 @@ ggp_tmax_date =
 
 Here there are two different types of graphs, one is a scatter and another is a density function, cannot overlay 
 Handy to say that here is one type of information here is another type of information 
+
+##Data Manipulation 
+
+What if we want to assign different colors to be different things?
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = name, y = tmax, fill = name)) + 
+  geom_violin(alpha = .5)
+```
+
+Question: how does it know what order to put onto the x-axis 
+
+When take a categorical variable, and make it onto the x-axis, R needs to know what order to plot them (1st, 2nd, 3rd)
+By default is alphabetical order
+
+Work with the factor variables that happens in the background of R that helps decide these things, if we can intervene with these factor variables then we can manipulate 
+
+```{r}
+weather_df %>% 
+  mutate(name = fct_relevel(name, c("Molokai_HI", "CentralParkNY", "Waterhole_WA"))) %>% 
+  ggplot(aes(x = name, y = tmax, fill = name)) + 
+  geom_violin(alpha = .5)
+```
+
+Very explicit that it is not in alphabetical order anymore but in this one 
+
+One of the thing that ggplot is choosing is the factor variable and changing the factor variable can help better manipulate 
+
+
+##PULSE data next 
+
+Imagine a collection of box plots showing the distribution of BDI score at 1,6,12 months
+
+```{r}
+pulse_df = 
+  read_sas("data/public_pulse_data.sas7bdat") %>% 
+  janitor::clean_names()
+```
+
+We cannot do this with this dataset as it is right now since there is missing data, I don't have a visit variable. Since the pulse_df is that each visit is a seperate variable (bdi_score_01m, bdi_score_06m and bdi_score_12m). 
+Need to pivot longer
+
+```{r}
+pulse_df = 
+  read_sas("data/public_pulse_data.sas7bdat") %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    cols = bdi_score_bl:bdi_score_12m,
+    names_to = "visit",
+    values_to = "bdi_score",
+    names_prefix = "bdi_score_"
+  ) %>% 
+  mutate(visit = ifelse(visit == "bl", "00m", visit))
+
+pulse_df %>% 
+  ggplot(aes(x = visit, y = bdi_score)) + 
+  geom_boxplot()
+```
+
+take each bdi, stack them up, new column called visit and have new rows for baseline, 1m, 6m and 12m as new inputs. 
+
+**Learning Assessment**
+
+```{r}
+litters_df = 
+  read_csv("data/FAS_litters.csv", na = c("NA", ".", "")) %>% 
+  janitor::clean_names() %>% 
+  separate(group, into = c("dose", "tx_day"), 3)
+
+pups_df = 
+  read_csv("data/FAS_pups.csv", na = c("NA", ".", "")) %>% 
+  janitor::clean_names() %>% 
+  pivot_longer(
+    pd_ears:pd_walk,
+    names_to = "outcome",
+    values_to = "pn_day",
+    names_prefix = "pd_"
+  )
+
+fas_df = 
+  left_join(pup_data, litter_data, by = "litter_number") 
+```
+
+
