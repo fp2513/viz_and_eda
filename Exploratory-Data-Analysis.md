@@ -266,3 +266,130 @@ weather_df %>%
     ##    Waterhole_WA  319      395
 
 \##general numeric summaries
+
+let’s try some other useful summaries
+
+``` r
+weather_df %>% 
+  group_by(name) %>% 
+  summarise(
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    median_tmin = median(tmin, na.rm = TRUE),
+    sd_prcp = sd(prcp, na.rm = TRUE)
+  )
+```
+
+    ## # A tibble: 3 × 4
+    ##   name           mean_tmax median_tmin sd_prcp
+    ##   <chr>              <dbl>       <dbl>   <dbl>
+    ## 1 CentralPark_NY     17.7         10     113. 
+    ## 2 Molokai_HI         28.3         20.6    63.2
+    ## 3 Waterhole_WA        7.38        -0.6   111.
+
+After group_by it keeps those groups, be aware of it and will keep thsoe
+groups as you continue to do other things
+
+``` r
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarise(
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    median_tmin = median(tmin, na.rm = TRUE),
+    sd_prcp = sd(prcp, na.rm = TRUE)
+  ) %>% 
+  ggplot(aes(x = month, y = mean_tmax, color = name)) + 
+  geom_point() +
+  geom_line()
+```
+
+    ## `summarise()` has grouped output by 'name'. You can override using the
+    ## `.groups` argument.
+
+![](Exploratory-Data-Analysis_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+Can be easier to see the trends if do some summary before Not looking at
+all the data all at once
+
+can print the data frames but can also format better for readers
+
+``` r
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarise(
+    mean_tmax = mean(tmax, na.rm = TRUE)
+  )
+```
+
+    ## `summarise()` has grouped output by 'name'. You can override using the
+    ## `.groups` argument.
+
+    ## # A tibble: 72 × 3
+    ## # Groups:   name [3]
+    ##    name           month      mean_tmax
+    ##    <chr>          <date>         <dbl>
+    ##  1 CentralPark_NY 2021-01-01      4.27
+    ##  2 CentralPark_NY 2021-02-01      3.87
+    ##  3 CentralPark_NY 2021-03-01     12.3 
+    ##  4 CentralPark_NY 2021-04-01     17.6 
+    ##  5 CentralPark_NY 2021-05-01     22.1 
+    ##  6 CentralPark_NY 2021-06-01     28.1 
+    ##  7 CentralPark_NY 2021-07-01     28.4 
+    ##  8 CentralPark_NY 2021-08-01     28.8 
+    ##  9 CentralPark_NY 2021-09-01     24.8 
+    ## 10 CentralPark_NY 2021-10-01     19.9 
+    ## # ℹ 62 more rows
+
+currently hard to read, so making something ‘untidy’ for easier
+legibility
+
+``` r
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarise(
+    mean_tmax = mean(tmax, na.rm = TRUE)
+  ) %>% 
+  pivot_wider(
+    names_from = name, 
+    values_from = mean_tmax
+  ) %>% 
+  knitr::kable(
+    digits = 3,
+    col.names = c("Month", "Central Park", "Molokai", "Waterhole"))
+```
+
+    ## `summarise()` has grouped output by 'name'. You can override using the
+    ## `.groups` argument.
+
+| Month      | Central Park | Molokai | Waterhole |
+|:-----------|-------------:|--------:|----------:|
+| 2021-01-01 |        4.271 |  27.616 |     0.800 |
+| 2021-02-01 |        3.868 |  26.368 |    -0.786 |
+| 2021-03-01 |       12.294 |  25.861 |     2.623 |
+| 2021-04-01 |       17.607 |  26.567 |     6.097 |
+| 2021-05-01 |       22.084 |  28.577 |     8.203 |
+| 2021-06-01 |       28.057 |  29.587 |    15.253 |
+| 2021-07-01 |       28.352 |  29.994 |    17.335 |
+| 2021-08-01 |       28.810 |  29.523 |    17.152 |
+| 2021-09-01 |       24.787 |  29.673 |    12.647 |
+| 2021-10-01 |       19.926 |  29.129 |     5.481 |
+| 2021-11-01 |       11.537 |  28.847 |     3.533 |
+| 2021-12-01 |        9.587 |  26.190 |    -2.097 |
+| 2022-01-01 |        2.855 |  26.606 |     3.606 |
+| 2022-02-01 |        7.650 |  26.829 |     2.989 |
+| 2022-03-01 |       11.990 |  27.726 |     3.416 |
+| 2022-04-01 |       15.810 |  27.723 |     2.463 |
+| 2022-05-01 |       22.255 |  28.283 |     5.810 |
+| 2022-06-01 |       26.090 |  29.157 |    11.127 |
+| 2022-07-01 |       30.723 |  29.529 |    15.861 |
+| 2022-08-01 |       30.500 |  30.697 |    18.830 |
+| 2022-09-01 |       24.923 |  30.413 |    15.207 |
+| 2022-10-01 |       17.426 |  29.223 |    11.884 |
+| 2022-11-01 |       14.017 |  27.960 |     2.140 |
+| 2022-12-01 |        6.761 |  27.348 |    -0.460 |
+
+digits = 3, means how many numbers after the decimal point the col.names
+just makes the names prettier, wihtout will just keep the origianl input
+name from the name column
+
+Computing groups and summaries are important in getting to know the
+dataset

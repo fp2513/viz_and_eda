@@ -131,4 +131,68 @@ weather_df %>%
 
 ##general numeric summaries 
 
+let's try some other useful summaries 
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  summarise(
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    median_tmin = median(tmin, na.rm = TRUE),
+    sd_prcp = sd(prcp, na.rm = TRUE)
+  )
+```
+
+After group_by it keeps those groups, be aware of it and will keep thsoe groups as you continue to do other things 
+
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarise(
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    median_tmin = median(tmin, na.rm = TRUE),
+    sd_prcp = sd(prcp, na.rm = TRUE)
+  ) %>% 
+  ggplot(aes(x = month, y = mean_tmax, color = name)) + 
+  geom_point() +
+  geom_line()
+```
+
+Can be easier to see the trends if do some summary before 
+Not looking at all the data all at once
+
+can print the data frames but can also format better for readers 
+
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarise(
+    mean_tmax = mean(tmax, na.rm = TRUE)
+  )
+```
+
+currently hard to read, so making something 'untidy' for easier legibility
+
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarise(
+    mean_tmax = mean(tmax, na.rm = TRUE)
+  ) %>% 
+  pivot_wider(
+    names_from = name, 
+    values_from = mean_tmax
+  ) %>% 
+  knitr::kable(
+    digits = 3,
+    col.names = c("Month", "Central Park", "Molokai", "Waterhole"))
+```
+
+digits = 3, means how many numbers after the decimal point
+the col.names just makes the names prettier, wihtout will just keep the origianl input name from the name column 
+
+Computing groups and summaries are important in getting to know the dataset 
+
+
+
 
